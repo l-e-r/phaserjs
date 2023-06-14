@@ -15,7 +15,7 @@ export default class GameOver extends Phaser.Scene {
         }).setOrigin(0.5);
         
         this.add.text(width * 0.5, height * 0.75, 'press spacebar to play again', {
-            fontSize: 28
+            fontSize: 14
         }).setOrigin(0.5);
 
         this.input.keyboard.once('keydown-SPACE', () => {
