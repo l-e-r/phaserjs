@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Phaser from 'phaser'
 
 const level = [
@@ -25,9 +24,8 @@ export default class Game extends Phaser.Scene {
     /** @type {Phaser.GameObjects.Group} */
     itemsGroup
 
-    /** @type {{ box: Phaser.Physics.Arcade.Sprite, item: Phaser.GameObjects.Sprite }} */
-    // @ts-ignore
-    selectedBoxes = []
+    /** @type {[{ box: Phaser.Physics.Arcade.Sprite, item: Phaser.GameObjects.Sprite }]} */
+    selectedBoxes = [{item: undefined, box: undefined}]
 
     constructor () {
         super('game');
@@ -142,7 +140,6 @@ export default class Game extends Phaser.Scene {
         item.scale = 0
         item.alpha = 0
 
-        // @ts-ignore
         this.selectedBoxes.push({box, item})
         
         this.tweens.add({
@@ -150,7 +147,7 @@ export default class Game extends Phaser.Scene {
             y: '-=50',
             alpha: 1,
             scale: 0.5,
-            duration: 500,
+            duration: 400,
             onComplete: () => {
                 if (this.selectedBoxes.length < 2) {
                     return
@@ -172,16 +169,17 @@ export default class Game extends Phaser.Scene {
 
         if (first.item.texture !== second.item.texture) {
             this.tweens.add({
-                targets: [first.item, second.itme],
+                targets: [first.item, second.item],
                 y: '+=50',
                 alpha: 0,
                 scale: 0,
-                duration: 300,
+                duration: 500,
                 onComplete: () => {
                     first.box.setData('isOpen', false)
                     second.box.setData('isOpen', false)
                 }
             })
+            return
         }
 
         first.box.setFrame(8)
