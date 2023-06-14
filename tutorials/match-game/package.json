@@ -4,9 +4,9 @@
 	"description": "A  Phaser 3 project using Parceljs",
 	"scripts": {
 		"start": "npx parcel src/index.html -p 8000",
-		"build": "npx parcel build src/index.html & npm run copy-assets",
+		"build": "npm run copy-assets && npx parcel build src/index.html",
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"copy-assets": "cp -r src/assets/* dist"
+		"copy-assets": "mkdir -p dist && cp -r src/assets/* dist"
 	},
 	"author": "supertommy",
 	"license": "MIT",
