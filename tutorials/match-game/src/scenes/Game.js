@@ -25,7 +25,7 @@ export default class Game extends Phaser.Scene {
     itemsGroup
 
     /** @type {[{ box: Phaser.Physics.Arcade.Sprite, item: Phaser.GameObjects.Sprite }]} */
-    selectedBoxes = [{item: undefined, box: undefined}]
+    selectedBoxes = []
 
     constructor () {
         super('game');
