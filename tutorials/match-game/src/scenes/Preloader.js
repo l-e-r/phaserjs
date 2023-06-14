@@ -7,7 +7,7 @@ export default class Preloader extends Phaser.Scene {
     }
 
     preload () {
-        this.load.spritesheet('sokoban', 'textures/sokoban_tilesheet.png', {
+        this.load.spritesheet('sokoban', 'sokoban_tilesheet.png', {
             frameWidth: 64
         })
     }
