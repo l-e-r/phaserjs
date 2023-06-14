@@ -7,15 +7,15 @@ export default class Preloader extends Phaser.Scene {
     }
 
     preload () {
-        this.load.spritesheet('sokoban', 'textures/sokoban_tilesheet.png', {
+        this.load.spritesheet('sokoban', 'sokoban_tilesheet.png', {
             frameWidth: 64
         })
 
-        this.load.image('bear', 'textures/bear.png')
-        this.load.image('chicken', 'textures/chicken.png')
-        this.load.image('duck', 'textures/duck.png')
-        this.load.image('parrot', 'textures/parrot.png')
-        this.load.image('penguin', 'textures/penguin.png')
+        this.load.image('bear', 'bear.png')
+        this.load.image('chicken', 'chicken.png')
+        this.load.image('duck', 'duck.png')
+        this.load.image('parrot', 'parrot.png')
+        this.load.image('penguin', 'penguin.png')
 
     }
 
