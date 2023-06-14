@@ -1,4 +1,12 @@
+// @ts-nocheck
 import Phaser from 'phaser'
+
+const level = [
+    [1, 0, 3],
+    [2, 4, 1],
+    [3, 4, 2]
+]
+
 
 export default class Game extends Phaser.Scene {
 
@@ -13,6 +21,13 @@ export default class Game extends Phaser.Scene {
 
     /** @type {Phaser.Physics.Arcade.Sprite} */
     activeBox
+
+    /** @type {Phaser.GameObjects.Group} */
+    itemsGroup
+
+    /** @type {{ box: Phaser.Physics.Arcade.Sprite, item: Phaser.GameObjects.Sprite }} */
+    // @ts-ignore
+    selectedBoxes = []
 
     constructor () {
         super('game');
@@ -37,6 +52,8 @@ export default class Game extends Phaser.Scene {
         this.boxGroup = this.physics.add.staticGroup()
         this.createBoxes()
 
+        this.itemsGroup = this.add.group()
+
         this.physics.add.collider(this.player, this.boxGroup,  this.handlePlayerBoxCollide, undefined, this )
     }
 
@@ -46,11 +63,12 @@ export default class Game extends Phaser.Scene {
         let xPer = 0.25
         let y = 150
 
-        for (let row = 0; row < 3; ++row) {
-            for (let col = 0; col < 3; ++col) {
+        for (let row = 0; row < level.length; ++row) {
+            for (let col = 0; col < level[row].length; ++col) {
                 this.boxGroup.get(width * xPer, y, 'sokoban', 10)
                     .setSize(64, 32)
                     .setOffset(0, 32)
+                    .setData('itemType', level[row][col])
                 xPer += 0.25
             }
 
@@ -66,6 +84,10 @@ export default class Game extends Phaser.Scene {
      */
     handlePlayerBoxCollide (player, box) {
 
+        if (box.getData('isOpen')) {
+            return
+        }
+
         if (this.activeBox) {
             return
         }
@@ -74,6 +96,96 @@ export default class Game extends Phaser.Scene {
 
         this.activeBox.setFrame(9)
 
+    }
+
+    /**
+     * 
+     * @param {Phaser.Physics.Arcade.Sprite} box 
+     */
+    openBox (box) {
+
+        if (!box) {
+            return
+        }
+
+        const itemType = box.getData('itemType')
+
+        /** @type {Phaser.GameObjects.Sprite} */
+        let item = this.itemsGroup.get(box.x, box.y)
+
+        switch (itemType) {
+            case 0:
+                item.setTexture('bear')
+                break
+            case 1:
+                item.setTexture('chicken')
+                break
+            case 2:
+                item.setTexture('duck')
+                break
+            case 3:
+                item.setTexture('parrot')
+                break
+            case 4:
+                item.setTexture('penguin')
+                break
+        }
+
+        if (!item) {
+            return
+        }
+
+        item.setData('noSort', true)
+        box.setData('isOpen', true)
+        item.setDepth(2000)
+
+        item.scale = 0
+        item.alpha = 0
+
+        // @ts-ignore
+        this.selectedBoxes.push({box, item})
+        
+        this.tweens.add({
+            targets: item,
+            y: '-=50',
+            alpha: 1,
+            scale: 0.5,
+            duration: 500,
+            onComplete: () => {
+                if (this.selectedBoxes.length < 2) {
+                    return
+                }
+
+                this.checkForMatch()
+            }
+        })
+
+        this.activeBox.setFrame(10)
+        this.activeBox = undefined
+
+    }
+
+    checkForMatch () {
+
+        const second  = this.selectedBoxes.pop()
+        const first = this.selectedBoxes.pop()
+
+        if (first.item.texture !== second.item.texture) {
+            this.tweens.add({
+                targets: [first.item, second.itme],
+                y: '+=50',
+                alpha: 0,
+                scale: 0,
+                duration: 300,
+                onComplete: () => {
+                    first.box.setData('isOpen', false)
+                    second.box.setData('isOpen', false)
+                }
+            })
+        }
+
+        first.box.setFrame(8)
+        second.box.setFrame(8)
     }
 
     updateActiveBox() {
@@ -118,6 +230,12 @@ export default class Game extends Phaser.Scene {
             const direction = parts[0]
             this.player.play(`${direction}-idle`)
         }
+
+        const spaceJustPressed = Phaser.Input.Keyboard.JustUp(this.cursors.space)
+
+        if (spaceJustPressed && this.activeBox) {
+            this.openBox(this.activeBox)
+        }
     }
 
     update () {
@@ -131,7 +249,9 @@ export default class Game extends Phaser.Scene {
             // @ts-ignore
             const child = c
 
-            child.setDepth(child.y)
+            if (!child.getData('noSort')) {
+                child.setDepth(child.y)
+            }
         })
     }
 }
