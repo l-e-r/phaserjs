@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import CountdownController from './CountdownController'
 
 const level = [
     [1, 0, 3],
@@ -27,6 +28,11 @@ export default class Game extends Phaser.Scene {
     /** @type {[{ box: Phaser.Physics.Arcade.Sprite, item: Phaser.GameObjects.Sprite }]} */
     selectedBoxes = []
 
+    matchesCount = 0
+
+    /** @type {CountdownController} */
+    countdown
+
     constructor () {
         super('game');
     }
@@ -46,13 +52,34 @@ export default class Game extends Phaser.Scene {
             .setOffset(12, 38)
             .play('down-idle')
 
+        this.player.setCollideWorldBounds(true)
+
         // create a box group
         this.boxGroup = this.physics.add.staticGroup()
         this.createBoxes()
 
         this.itemsGroup = this.add.group()
 
+        const timerLabel = this.add.text(width * 0.5, 50, '45', {
+            fontSize: 48
+        }).setOrigin(0.5)
+
+        this.countdown = new CountdownController(this, timerLabel)
+        this.countdown.start(this.handleCountdownFinished.bind(this))
+
         this.physics.add.collider(this.player, this.boxGroup,  this.handlePlayerBoxCollide, undefined, this )
+    }
+
+    handleCountdownFinished () {
+
+        this.player.active = false
+        this.player.setVelocity(0, 0)
+
+        const { width, height } = this.scale
+
+        this.add.text(width * 0.5, height * 0.5, 'You Lose!', {
+            fontSize: 48
+        }).setOrigin(0.5)
     }
 
     createBoxes () {
@@ -147,8 +174,14 @@ export default class Game extends Phaser.Scene {
             y: '-=50',
             alpha: 1,
             scale: 0.5,
-            duration: 400,
+            duration: 500,
             onComplete: () => {
+
+                if (itemType === 0) {
+                    this.handleBearSelected()
+                    return
+                }
+
                 if (this.selectedBoxes.length < 2) {
                     return
                 }
@@ -162,6 +195,33 @@ export default class Game extends Phaser.Scene {
 
     }
 
+    handleBearSelected () {
+        const { box, item } = this.selectedBoxes.pop()
+
+        item.setTint(0xff0000)
+        box.setFrame(7)
+
+        this.player.active = false
+        this.player.setVelocity(0, 0)
+
+        this.time.delayedCall(1000, () => {
+            item.setTint(0xffffff)
+            box.setFrame(10)
+            box.setData('isOpen', false)
+
+            this.tweens.add({
+                targets: item,
+                y: '+=50',
+                alpha: 0,
+                scale: 0,
+                duration: 300,
+                onComplete: () => {
+                    this.player.active = true
+                }
+            })
+        })
+    }
+
     checkForMatch () {
 
         const second  = this.selectedBoxes.pop()
@@ -173,7 +233,8 @@ export default class Game extends Phaser.Scene {
                 y: '+=50',
                 alpha: 0,
                 scale: 0,
-                duration: 500,
+                duration: 300,
+                delay: 1000,
                 onComplete: () => {
                     first.box.setData('isOpen', false)
                     second.box.setData('isOpen', false)
@@ -182,8 +243,27 @@ export default class Game extends Phaser.Scene {
             return
         }
 
-        first.box.setFrame(8)
-        second.box.setFrame(8)
+        ++this.matchesCount
+
+        this.time.delayedCall(1000, () => {
+            first.box.setFrame(8)
+            second.box.setFrame(8)
+
+            if (this.matchesCount >= 4) {
+                // game won
+                this.countdown.stop()
+
+                this.player.active = false
+                this.player.setVelocity(0, 0)
+
+                const { width, height } = this.scale
+                this.add.text(width * 0.5, height * 0.5, 'You Win!', {
+                    fontSize: 48
+                })
+                .setOrigin(0.5)
+            }
+        })
+       
     }
 
     updateActiveBox() {
@@ -208,6 +288,10 @@ export default class Game extends Phaser.Scene {
 
     updatePlayer () {
         const speed = 200
+
+        if (!this.player.active) {
+            return
+        }
 
         if (this.cursors.left.isDown) {
             this.player.setVelocity(-speed, 0)
@@ -251,5 +335,7 @@ export default class Game extends Phaser.Scene {
                 child.setDepth(child.y)
             }
         })
+
+        this.countdown.update()
     }
 }
