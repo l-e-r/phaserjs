@@ -17,6 +17,10 @@ export default class Preloader extends Phaser.Scene {
         this.load.image('parrot', 'parrot.png')
         this.load.image('penguin', 'penguin.png')
 
+        this.load.image('logo', 'memory_match_logo.png')
+        this.load.image('start', 'start.png')
+
+
     }
 
     create () {
@@ -74,6 +78,6 @@ export default class Preloader extends Phaser.Scene {
         })
 
         
-        this.scene.start('game');
+        this.scene.start('intro');
     }
 }
